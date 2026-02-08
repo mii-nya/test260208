@@ -1,0 +1,2 @@
+Put your lightweight muted preview MP4 here and name it piano-preview.mp4 (or update data-video).
+Recommended: H.264 MP4, 720p30, no audio, 5-20 seconds, 2-5MB.
