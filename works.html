@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+
+<html lang="ja">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1" name="viewport"/>
+<title>Works | Mizuki Nakano</title>
+<meta content="濃紺×ゴールド、紅茶と音楽モチーフのポートフォリオ（テンプレ）" name="description"/>
+<link href="style.css" rel="stylesheet"/>
+</head>
+<body>
+<a class="skip" href="#main">本文へスキップ</a>
+<div aria-hidden="true" class="float-layer"></div>
+<header class="header">
+<div class="header__inner">
+<a class="site-title" href="index.html">Mizuki Nakano</a>
+<button aria-controls="nav" aria-expanded="false" aria-label="メニュー" class="music-menu" id="menuBtn">
+<span aria-hidden="true" class="music-menu__icon">
+<img alt="" class="music-menu__img music-menu__img--staff" src="assets/img/menu-staff.png"/>
+<img alt="" class="music-menu__img music-menu__img--rest" src="assets/img/menu-rest.png"/>
+</span>
+</button>
+<nav aria-label="メインナビゲーション" class="nav" id="nav">
+<a class="nav__link nav__link--eighth" href="about.html">About</a>
+<a class="nav__link nav__link--double-eighth" href="skill.html">Skill</a>
+<a class="nav__link nav__link--quarter is-active" href="works.html">Works</a>
+<a class="nav__link nav__link--triplet" href="index.html#contact">Contact</a>
+</nav>
+</div>
+</header>
+<main id="main">
+<section class="section">
+<div class="wrap">
+<h1 class="page-title">Works</h1>
+
+<!-- Filter (category) -->
+<div aria-label="Works フィルター" class="works-filter" id="worksFilter">
+<button aria-pressed="true" class="filter-btn is-active" data-filter="all" type="button">All</button>
+<button aria-pressed="false" class="filter-btn" data-filter="web" type="button">Web</button>
+<button aria-pressed="false" class="filter-btn" data-filter="banner" type="button">Banner</button>
+<button aria-pressed="false" class="filter-btn" data-filter="illust" type="button">Illust</button>
+<button aria-pressed="false" class="filter-btn" data-filter="photo" type="button">Photo</button>
+<button aria-pressed="false" class="filter-btn" data-filter="video" type="button">Video</button>
+<button aria-pressed="false" class="filter-btn" data-filter="thumbnail" type="button">Thumbnail</button>
+<button aria-pressed="false" class="filter-btn" data-filter="other" type="button">Other</button>
+</div>
+<div class="cards cards--list" id="worksList">
+<article class="card work-card" data-badge="Web" data-category="web" data-desc="濃紺×ゴールドの世界観で、初心者らしい丁寧さを出す練習。" data-img="assets/img/works/web-site.png" data-images="assets/img/works/web-site.png, assets/img/works/web-site-2.png" data-muted="Site" data-points="配色設計 | 余白 | レスポンシブ" data-title="Webサイト（架空）" data-url="https://example.com" style="--bg:url('assets/img/works/web-site.png')" tabindex="0" data-id="web">
+<div class="card__top"><span class="badge">Web</span>
+
+
+</div>
+<h3 class="card__title">Webサイト（架空）</h3>
+<p class="card__text">濃紺×ゴールドの世界観で、初心者らしい丁寧さを出す練習。</p>
+
+</article>
+<article class="card work-card" data-badge="Web" data-category="web" data-desc="CTAの配置と視線誘導を意識したLP。" data-img="assets/img/works/lp.png" data-images="assets/img/works/lp.png, assets/img/works/lp-2.png" data-muted="LP" data-points="ファーストビュー | CTA | 情報設計" data-title="LPデザイン（架空）" data-url="https://example.com" style="--bg:url('assets/img/works/lp.png')" tabindex="0" data-id="lp">
+<div class="card__top"><span class="badge">Web</span> </div>
+<h3 class="card__title">LPデザイン（架空）</h3>
+<p class="card__text">CTAの配置と視線誘導を意識したLP。</p>
+
+</article>
+<article class="card work-card" data-badge="Banner" data-category="banner" data-desc="紅茶・焼き菓子のモチーフでやさしい雰囲気に。" data-img="assets/img/works/banner.png" data-images="assets/img/works/banner.png, assets/img/works/banner-2.png" data-muted="SNS" data-points="文字の可読性 | トーン統一 | 余白" data-title="バナー（SNS）" data-url="" style="--bg:url('assets/img/works/banner.png')" tabindex="0" data-id="banner">
+<div class="card__top"><span class="badge">Banner</span> </div>
+<h3 class="card__title">バナー（SNS）</h3>
+<p class="card__text">紅茶・焼き菓子のモチーフでやさしい雰囲気に。</p>
+
+</article>
+<article class="card work-card" data-badge="Thumbnail" data-category="thumbnail" data-desc="タイトルとアイコンのバランス、視認性の練習。" data-img="assets/img/works/thumbnail.png" data-images="assets/img/works/thumbnail.png, assets/img/works/thumbnail-2.png" data-muted="Thumb" data-points="フォントサイズ | コントラスト | 情報量" data-title="Videoサムネ" data-url="" style="--bg:url('assets/img/works/thumbnail.png')" tabindex="0" data-id="travel">
+<div class="card__top"><span class="badge">Thumbnail</span> </div>
+<h3 class="card__title">Videoサムネ</h3>
+<p class="card__text">タイトルとアイコンのバランス、視認性の練習。</p>
+
+</article>
+<article class="card work-card" data-badge="Illust" data-category="illust" data-desc="世界観づくりのための一枚絵（ダミー）。" data-img="assets/img/works/illustration.png" data-images="assets/img/works/illustration.png, assets/img/works/illustration-2.png" data-muted="Art" data-points="雰囲気 | 配色 | 構図" data-title="イラスト" data-url="" style="--bg:url('assets/img/works/illustration.png')" tabindex="0" data-id="portrait">
+<div class="card__top"><span class="badge">Illust</span> </div>
+<h3 class="card__title">イラスト</h3>
+<p class="card__text">世界観づくりのための一枚絵（ダミー）。</p>
+
+</article>
+<article class="card work-card" data-badge="Photo" data-category="photo" data-desc="暗めの色味を整えて、上品なトーンに寄せる。" data-img="assets/img/works/photo.png" data-images="assets/img/works/photo.png, assets/img/works/photo-2.png" data-muted="Edit" data-points="色温度 | 露出 | トーン" data-title="写真（編集）" data-url="" style="--bg:url('assets/img/works/photo.png')" tabindex="0" data-id="mansion">
+<div class="card__top"><span class="badge">Photo</span> </div>
+<h3 class="card__title">写真（編集）</h3>
+<p class="card__text">暗めの色味を整えて、上品なトーンに寄せる。</p>
+
+</article>
+<article class="card work-card" data-badge="Video" data-category="video" data-desc="演奏動画のサムネ・導線づくり（ダミー）。" data-img="assets/img/works/piano-video.png" data-images="assets/img/works/piano-video.png, assets/img/works/piano-video-2.png" data-muted="Piano" data-points="見出し | 世界観 | リンク導線" data-title="弾いてみた（ピアノ）" data-url="https://www.youtube.com/" style="--bg:url('assets/img/works/piano-video.png')" tabindex="0" data-id="piano" data-video="assets/video/piano-preview.mp4">
+<div class="card__top"><span class="badge">Video</span> </div>
+<h3 class="card__title">弾いてみた（ピアノ）</h3>
+<p class="card__text">演奏動画のサムネ・導線づくり（ダミー）。</p>
+
+</article>
+
+<article class="card work-card" data-badge="Thumbnail" data-category="thumbnail" data-desc="YouTube用のサムネイル案。文字の読みやすさと被写体の見せ方を意識。" data-img="assets/img/works/thumbnail2.png" data-images="assets/img/works/thumbnail2.png, assets/img/works/thumbnail2-2.png" data-points="構図 | 文字設計 | 色味" style="--bg:url('assets/img/works/thumbnail2.png')" tabindex="0" data-id="thumb2">
+  <div class="card__top"><span class="badge">Thumbnail</span></div>
+  <h3 class="card__title">サムネ制作（架空）</h3>
+  <p class="card__text">情報の優先順位を整理して、視認性の高い見出しに。</p>
+</article>
+
+<article class="card work-card" data-badge="Other" data-category="other" data-desc="iOS用の小さなアプリを制作。機能紹介ページとUIの見せ方をまとめました。" data-img="assets/img/works/ios-app.png" data-images="assets/img/works/ios-app.png, assets/img/works/ios-app-2.png" data-points="UI設計 | 実装 | 画面設計" style="--bg:url('assets/img/works/ios-app.png')" tabindex="0" data-id="other">
+  <div class="card__top"><span class="badge">Other</span></div>
+  <h3 class="card__title">iOSアプリ（制作）</h3>
+  <p class="card__text">シンプルな機能を丁寧に作り、使いやすさを検証。</p>
+</article>
+
+</div>
+<div aria-hidden="true" aria-modal="true" class="works-modal" id="worksModal" role="dialog">
+<div class="works-modal__overlay" data-close-modal="1"></div>
+<div class="works-modal__panel" role="document" tabindex="-1">
+<button aria-label="閉じる" class="works-modal__close" data-close-modal="1" id="worksModalClose" type="button">×</button>
+<div aria-hidden="true" class="works-modal__media works-modal__carousel" id="modalMedia">
+ <button class="works-modal__nav works-modal__nav--prev" type="button" aria-label="前の画像">‹</button>
+ <div class="works-modal__viewport">
+ <img class="works-modal__img" id="modalImg" alt="作品画像">
+ <img class="works-modal__img works-modal__img--next" id="modalImgNext" alt="" aria-hidden="true">
+  <div class="works-modal__video-wrap" id="modalVideoWrap" hidden>
+    <video class="works-modal__video" id="modalVideo" autoplay muted loop playsinline preload="metadata"></video>
+  </div>
+
+ </div>
+ <button class="works-modal__nav works-modal__nav--next" type="button" aria-label="次の画像">›</button>
+</div>
+<div class="works-modal__body">
+<div class="works-modal__top">
+<span class="badge" id="modalBadge">Web</span> </div>
+<h2 class="works-modal__title" id="modalTitle">Title</h2>
+<p class="works-modal__desc" id="modalDesc">Description</p>
+<h3 class="works-modal__sub">こだわりポイント</h3>
+<ul class="works-modal__points" id="modalPoints"></ul>
+<div class="works-modal__actions" id="modalActions"></div>
+</div>
+</div>
+</div>
+</div>
+</section>
+
+</main>
+<footer class="footer">
+<div class="wrap footer__inner">
+<div class="footer__left">
+<small>© <span id="year"></span> Mizuki Nakano</small>
+</div>
+<div aria-label="SNSリンク" class="social">
+<a aria-label="X" class="social__link" href="https://x.com/" rel="noreferrer" target="_blank">
+<img alt="" src="assets/icons/x.svg"/>
+</a>
+<a aria-label="Instagram" class="social__link" href="https://www.instagram.com/mii_nya0704" rel="noreferrer" target="_blank">
+<img alt="" src="assets/icons/instagram.svg"/>
+</a>
+<a aria-label="Video" class="social__link" href="https://www.youtube.com/@vvh0_1z_3e" rel="noreferrer" target="_blank">
+<img alt="" src="assets/icons/youtube.svg"/>
+</a>
+</div>
+</div>
+</footer>
+<script src="script.js" defer></script>
+<button aria-label="ページトップへ戻る" class="to-top" id="toTopBtn" type="button">
+<span aria-hidden="true" class="to-top__icon">
+<svg aria-hidden="true" fill="none" viewbox="0 0 24 24">
+<path d="M12 6 L5 13" stroke="rgba(226,199,111,.95)" stroke-linecap="round" stroke-width="2.2"></path>
+<path d="M12 6 L19 13" stroke="rgba(226,199,111,.95)" stroke-linecap="round" stroke-width="2.2"></path>
+</svg>
+</span>
+<span class="to-top__label">TOP</span>
+</button>
+
+
+<div class="img-lightbox" id="imgLightbox" aria-hidden="true">
+  <div class="img-lightbox__backdrop"></div>
+  <button class="img-lightbox__nav img-lightbox__nav--prev" type="button" aria-label="前の画像">‹</button>
+  <div class="img-lightbox__viewport" role="dialog" aria-label="拡大画像" tabindex="-1">
+    <img class="img-lightbox__img" id="imgLightboxImg" alt="拡大表示">
+    <img class="img-lightbox__img img-lightbox__img--next" id="imgLightboxImgNext" alt="" aria-hidden="true">
+  </div>
+  <button class="img-lightbox__nav img-lightbox__nav--next" type="button" aria-label="次の画像">›</button>
+</div>
+</body>
+</html>
