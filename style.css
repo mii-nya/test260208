@@ -1,5 +1,8 @@
 /* ===== Theme ===== */
 :root{
+  --floating-safe-bottom: 18px;
+  --floating-footer-gap: 12px;
+
   --navy:#0f1a2b;
   --navy2:#0b1422;
   --gold:#e6c77a;
@@ -119,7 +122,7 @@ a{color:inherit;}
   justify-content: center;
   place-items:center;
   box-shadow:0 10px 22px rgba(0,0,0,.28);
-  transition:transform .18s ease, border-color .18s ease, background .18s ease;
+  transition: transform .18s ease, border-color .18s ease, background .18s ease, bottom .25s ease;
 }
 
 /* Image-based icon (PNG). Old staff+note rules are kept for safety. */
@@ -1092,7 +1095,7 @@ body.modal-open .footer{ pointer-events:none; }
 
   position: fixed;
   right: 16px;
-  bottom: 18px;
+  bottom: var(--floating-safe-bottom);
   z-index: 2000;
   display: flex;
   flex-direction: column;
@@ -2109,4 +2112,13 @@ body.lightbox-open{
 /* Improve tap/click reliability on mobile */
 .works-modal__viewport{
   touch-action: manipulation;
+}
+
+
+/* v113 floating safe area (mobile) */
+@media (max-width: 600px){
+  :root{
+    --floating-safe-bottom: 18px; /* adjust if needed */
+    --floating-footer-gap: 12px; /* gap above footer */
+  }
 }

@@ -1380,3 +1380,72 @@ const close = () => {
     }, true);
   }
 })();
+
+
+
+/* v113: mobile to-top avoids footer overlap (stop above footer) */
+(function(){
+  const btn = document.querySelector('.to-top');
+  const footer = document.querySelector('footer.footer, .footer, footer');
+  if(!btn || !footer) return;
+
+  const mqMobile = window.matchMedia('(max-width: 600px)');
+  const mqCoarse = window.matchMedia('(pointer: coarse)');
+  const isMobile = () => (mqMobile.matches || mqCoarse.matches);
+
+  const px = (v) => {
+    const n = parseFloat(String(v || '').replace('px',''));
+    return Number.isFinite(n) ? n : 0;
+  };
+
+  const getVarPx = (name, fallback) => {
+    const cs = getComputedStyle(document.documentElement);
+    const val = cs.getPropertyValue(name).trim();
+    if(!val) return fallback;
+    if(val.endsWith('px')) return px(val);
+    // allow rem
+    if(val.endsWith('rem')){
+      const rem = parseFloat(val);
+      const base = px(getComputedStyle(document.documentElement).fontSize) || 16;
+      return rem * base;
+    }
+    return px(val) || fallback;
+  };
+
+  const update = () => {
+    if(!isMobile()){
+      btn.style.bottom = '';
+      return;
+    }
+
+    const safeBottom = getVarPx('--floating-safe-bottom', 18);
+    const gap = getVarPx('--floating-footer-gap', 12);
+
+    const rect = footer.getBoundingClientRect();
+    const vh = window.innerHeight || document.documentElement.clientHeight;
+
+    // distance from viewport bottom to footer top
+    const footerVisibleHeight = Math.max(0, vh - rect.top);
+    // When footer is visible, push the button up so it stays above footer + gap
+    const desiredBottom = Math.max(safeBottom, footerVisibleHeight + gap);
+
+    btn.style.bottom = desiredBottom + 'px';
+  };
+
+  const rafUpdate = () => requestAnimationFrame(update);
+
+  window.addEventListener('scroll', rafUpdate, { passive: true });
+  window.addEventListener('resize', rafUpdate);
+
+  // React to media query change
+  if(mqMobile.addEventListener){
+    mqMobile.addEventListener('change', rafUpdate);
+    mqCoarse.addEventListener('change', rafUpdate);
+  }else{
+    mqMobile.addListener(rafUpdate);
+    mqCoarse.addListener(rafUpdate);
+  }
+
+  // initial
+  rafUpdate();
+})();
