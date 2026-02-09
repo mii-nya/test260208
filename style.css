@@ -388,6 +388,20 @@ a{color:inherit;}
 }
 .muted{color:rgba(240,219,154,.68);}
 
+/* link */
+a.link-pdf{
+  color: inherit;           
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.15em;
+  transition: color .2s ease, font-weight .2s ease;
+}
+
+a.link-pdf:hover{
+  color: #f0d889; 
+  font-weight: 600;
+}
+
 /* Panels / Skills */
 .panel{display:grid; gap:14px;}
 .panel__box{
