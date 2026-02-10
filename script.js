@@ -114,7 +114,57 @@ setInterval(() => {
   // v102: self-hosted video (preview) support
   const modalVideoWrap = document.getElementById("modalVideoWrap");
   const modalVideo = document.getElementById("modalVideo");
+  let modalVideoWrapNext = null;
+  let modalVideoNext = null;
   let clickUrl = "";
+
+  function ensureVideoNext(){
+    if (modalVideoWrapNext && modalVideoNext) return;
+    if (!viewport) return;
+
+    modalVideoWrapNext = document.createElement("div");
+    modalVideoWrapNext.id = "modalVideoWrapNext";
+    modalVideoWrapNext.className = "works-modal__video-wrap";
+    modalVideoWrapNext.hidden = true;
+    // Keep it ready for animation
+    modalVideoWrapNext.style.opacity = "0";
+    modalVideoWrapNext.style.transform = "translateX(100%)";
+
+    modalVideoNext = document.createElement("video");
+    modalVideoNext.id = "modalVideoNext";
+    modalVideoNext.className = "works-modal__video";
+    modalVideoNext.muted = true;
+    modalVideoNext.loop = true;
+    modalVideoNext.playsInline = true;
+    modalVideoNext.setAttribute("playsinline", "");
+    modalVideoNext.setAttribute("muted", "");
+    modalVideoNext.setAttribute("loop", "");
+    // controls are not needed inside modal; lightbox has controls
+    modalVideoNext.controls = false;
+
+    modalVideoWrapNext.appendChild(modalVideoNext);
+    viewport.appendChild(modalVideoWrapNext);
+  }
+
+  function prepVideoNext(src){
+    ensureVideoNext();
+    if (!modalVideoWrapNext || !modalVideoNext) return;
+    modalVideoWrapNext.hidden = false;
+    modalVideoNext.innerHTML = "";
+    modalVideoNext.src = src || "";
+    try{ modalVideoNext.load(); }catch(e){}
+    try{ const p = modalVideoNext.play(); if (p && typeof p.catch === "function") p.catch(()=>{}); }catch(e){}
+  }
+
+  function resetVideoNext(){
+    if (!modalVideoWrapNext || !modalVideoNext) return;
+    try{ modalVideoNext.pause(); }catch(e){}
+    modalVideoNext.removeAttribute("src");
+    try{ modalVideoNext.load(); }catch(e){}
+    modalVideoWrapNext.hidden = true;
+    modalVideoWrapNext.style.opacity = "0";
+    modalVideoWrapNext.style.transform = "translateX(100%)";
+  }
 
   function setVideo(src){
     if (!modalVideo || !modalVideoWrap) return;
@@ -162,13 +212,21 @@ setInterval(() => {
       const modal = document.getElementById("worksModal");
       if (!modal || (!modal.classList.contains("is-open") && !document.body.classList.contains("modal-open"))) return;
 
-      // video -> external link
-      if (viewport.classList.contains("is-video")) {
-        if (!clickUrl) return;
-        window.open(clickUrl, "_blank", "noopener");
+      const currentSrc = images[imgIndex] || "";
+
+      // Video slide:
+      // - If this work has an external URL, open it.
+      // - Otherwise, open an in-page video lightbox.
+      if (isVideoFile(currentSrc)) {
+        if (clickUrl){
+          window.open(clickUrl, "_blank", "noopener");
+          return;
+        }
+        openVideoLightbox(currentSrc);
         return;
       }
 
+      // Image slide: use existing image lightbox API
       const api = window.__imgLightbox;
       const src = (modalImg && modalImg.getAttribute("src")) ? modalImg.getAttribute("src") : "";
       if (api && typeof api.open === "function" && src) api.open(src);
@@ -193,6 +251,89 @@ setInterval(() => {
   }
 
 
+  // vVideoLightbox: self-hosted videos (no external URL) can be opened like images
+  let __videoLbEl = null;
+  let __videoLbVideo = null;
+
+  function ensureVideoLightbox(){
+    if (__videoLbEl) return;
+
+    __videoLbEl = document.createElement("div");
+    __videoLbEl.className = "video-lightbox";
+    __videoLbEl.setAttribute("role", "dialog");
+    __videoLbEl.setAttribute("aria-modal", "true");
+    __videoLbEl.style.cssText = [
+      "position:fixed",
+      "inset:0",
+      "z-index:10000",
+      "background:rgba(0,0,0,.85)",
+      "display:none",
+      "align-items:center",
+      "justify-content:center",
+      "padding:24px"
+    ].join(";");
+
+    const box = document.createElement("div");
+    box.style.cssText = [
+      "width:min(100%, 1100px)",
+      "height:min(100%, 80vh)",
+      "background:#000",
+      "border-radius:16px",
+      "overflow:hidden",
+      "position:relative",
+      "display:flex",
+      "align-items:center",
+      "justify-content:center"
+    ].join(";");
+
+    __videoLbVideo = document.createElement("video");
+    __videoLbVideo.muted = true;
+    __videoLbVideo.loop = true;
+    __videoLbVideo.playsInline = true;
+    __videoLbVideo.controls = true;
+    __videoLbVideo.style.cssText = "width:100%;height:100%;object-fit:contain;display:block;background:#000;";
+
+    box.appendChild(__videoLbVideo);
+    __videoLbEl.appendChild(box);
+    document.body.appendChild(__videoLbEl);
+
+    // close on background click
+    __videoLbEl.addEventListener("click", (e) => {
+      if (e.target === __videoLbEl) closeVideoLightbox();
+    });
+
+    // close on ESC
+    window.addEventListener("keydown", (e) => {
+      if (e.key === "Escape" && __videoLbEl.style.display === "flex"){
+        closeVideoLightbox();
+      }
+    });
+  }
+
+  function openVideoLightbox(src){
+    ensureVideoLightbox();
+    __videoLbEl.style.display = "flex";
+    try{ document.body.style.overflow = "hidden"; }catch(e){}
+
+    __videoLbVideo.src = src;
+    __videoLbVideo.currentTime = 0;
+    __videoLbVideo.play().catch(()=>{});
+  }
+
+  function closeVideoLightbox(){
+    if (!__videoLbEl) return;
+    __videoLbVideo.pause();
+    __videoLbVideo.removeAttribute("src");
+    __videoLbVideo.load();
+    __videoLbEl.style.display = "none";
+    // restore scroll only if works modal isn't open
+    const wm = document.getElementById("worksModal");
+    if (!wm || !wm.classList.contains("is-open")){
+      try{ document.body.style.overflow = ""; }catch(e){}
+    }
+  }
+
+
   let images = [];
   // v60: expose carousel state for lightbox
   window.__worksCarousel = window.__worksCarousel || {};
@@ -205,18 +346,51 @@ setInterval(() => {
   function normalizeList(s){
     return (s || "").split(",").map(x=>x.trim()).filter(Boolean);
   }
+  function isVideoFile(src){
+    return /\.(mp4|mov|webm)$/i.test(src || "");
+  }
   function updateNav(){
     const many = images.length > 1;
     if (navPrev) navPrev.disabled = !many;
     if (navNext) navNext.disabled = !many;
   }
   function renderImage(){
+    const src = images[imgIndex] || "";
+
+    // Mixed media slide: video
+    if (isVideoFile(src)){
+      if (viewport) viewport.classList.add("is-video");
+      modal.classList.remove("is-portrait");
+
+      // Hide image layers (keep layout)
+      if (modalImg) modalImg.style.display = "none";
+      if (modalImgNext) modalImgNext.style.display = "none";
+
+      setVideo(src);
+      // Ensure animation layers are reset
+      if (modalVideoWrap) { modalVideoWrap.style.transform = ""; modalVideoWrap.style.opacity = ""; }
+      resetVideoNext();
+      updateNav();
+      return;
+    }
+
+    // Image slide
+    clearVideo();
+    if (modalVideoWrap) { modalVideoWrap.style.transform = ""; modalVideoWrap.style.opacity = ""; }
+    resetVideoNext();
+    if (viewport) viewport.classList.remove("is-video");
+
+    if (modalImg) modalImg.style.display = "";
+    if (modalImgNext) modalImgNext.style.display = "";
+
     if (!modalImg) return;
     modalImg.onload = () => { try{ setPortraitState(); }catch(e){} };
-    modalImg.src = images[imgIndex] || "";
+    modalImg.src = src;
     if (modalImgNext) modalImgNext.src = "";
     updateNav();
   }
+
+
   function slideTo(nextIndex, dir){
     if (!viewport || !modalImg || !modalImgNext) { imgIndex = nextIndex; renderImage(); return; }
     if (animating) return;
@@ -225,40 +399,121 @@ setInterval(() => {
     if (nextIndex >= images.length) nextIndex = 0;
     if (nextIndex === imgIndex) return;
 
+
+    const currSrc = images[imgIndex] || "";
+    const nextSrc = images[nextIndex] || "";
+    const currIsVideo = isVideoFile(currSrc);
+    const nextIsVideo = isVideoFile(nextSrc);
+
     animating = true;
     viewport.classList.add("is-sliding");
-
-    modalImgNext.src = images[nextIndex];
-
-    // update portrait state after next image preloads
-    modalImgNext.onload = () => { try{ setPortraitState(); }catch(e){} };
 
     const nextStart = (dir === "next") ? 100 : -100;
     const outTo = (dir === "next") ? -18 : 18;
 
+    // Prepare current element
+    const currEl = currIsVideo ? modalVideoWrap : modalImg;
+    const nextEl = nextIsVideo ? null : modalImgNext;
+
+    // Ensure current is visible
+    if (currIsVideo){
+      if (modalVideoWrap){
+        modalVideoWrap.hidden = false;
+        modalVideoWrap.style.display = "";
+      }
+    }else{
+      modalImg.style.display = "";
+      modalImgNext.style.display = "";
+    }
+
+    // Prepare next slide content
+    if (nextIsVideo){
+      // Prepare next video layer
+      prepVideoNext(nextSrc);
+      if (modalVideoWrapNext){
+        modalVideoWrapNext.style.transform = `translateX(${nextStart}%)`;
+        modalVideoWrapNext.style.opacity = "1";
+      }
+      // If we are leaving an image, keep it visible for animation
+      if (!currIsVideo){
+        modalImg.style.transform = "translateX(0%)";
+        modalImg.style.opacity = "1";
+      }else if (modalVideoWrap){
+        modalVideoWrap.style.transform = "translateX(0%)";
+        modalVideoWrap.style.opacity = "1";
+      }
+      // Reflow
+      if (modalVideoWrapNext) void modalVideoWrapNext.offsetWidth;
+
+      // Animate out current
+      if (currIsVideo && modalVideoWrap){
+        modalVideoWrap.style.transform = `translateX(${outTo}%)`;
+        modalVideoWrap.style.opacity = "0";
+      }else{
+        modalImg.style.transform = `translateX(${outTo}%)`;
+        modalImg.style.opacity = "0";
+      }
+      // Animate in next video
+      if (modalVideoWrapNext){
+        modalVideoWrapNext.style.transform = "translateX(0%)";
+        modalVideoWrapNext.style.opacity = "1";
+      }
+
+      window.setTimeout(() => {
+        imgIndex = nextIndex;
+        // Reset transforms
+        if (modalVideoWrap){ modalVideoWrap.style.transform = ""; modalVideoWrap.style.opacity = ""; }
+        if (modalImg){ modalImg.style.transform = ""; modalImg.style.opacity = ""; }
+        if (modalImgNext){ modalImgNext.style.transform = "translateX(100%)"; modalImgNext.style.opacity = "0"; }
+        if (modalVideoWrapNext){ modalVideoWrapNext.style.transform = "translateX(100%)"; modalVideoWrapNext.style.opacity = "0"; }
+        viewport.classList.remove("is-sliding");
+        animating = false;
+        // Render steady state (shows the correct media + hides unused layer)
+        renderImage();
+      }, 290);
+      return;
+    }
+
+    // Next is image (existing slide animation), but current may be video
+    modalImgNext.src = images[nextIndex];
+    modalImgNext.onload = () => { try{ setPortraitState(); }catch(e){} };
+
+    // Place next image offscreen
     modalImg.style.transform = "translateX(0%)";
     modalImg.style.opacity = "1";
     modalImgNext.style.transform = `translateX(${nextStart}%)`;
     modalImgNext.style.opacity = "1";
 
+    // If current is video, animate the videoWrap out while next image comes in
+    if (currIsVideo && modalVideoWrap){
+      modalVideoWrap.style.transform = "translateX(0%)";
+      modalVideoWrap.style.opacity = "1";
+    }
+
     void modalImgNext.offsetWidth;
 
-    modalImg.style.transform = `translateX(${outTo}%)`;
-    modalImg.style.opacity = "0";
+    if (currIsVideo && modalVideoWrap){
+      modalVideoWrap.style.transform = `translateX(${outTo}%)`;
+      modalVideoWrap.style.opacity = "0";
+    }else{
+      modalImg.style.transform = `translateX(${outTo}%)`;
+      modalImg.style.opacity = "0";
+    }
+
     modalImgNext.style.transform = "translateX(0%)";
     modalImgNext.style.opacity = "1";
 
     window.setTimeout(() => {
       imgIndex = nextIndex;
-      modalImg.src = images[imgIndex] || "";
-      modalImg.style.transform = "";
-      modalImg.style.opacity = "";
-      modalImgNext.style.transform = "translateX(100%)";
-      modalImgNext.style.opacity = "0";
+      // Reset states; renderImage will clearVideo as needed
+      if (modalVideoWrap){ modalVideoWrap.style.transform = ""; modalVideoWrap.style.opacity = ""; }
+      if (modalImg){ modalImg.style.transform = ""; modalImg.style.opacity = ""; }
+      if (modalImgNext){ modalImgNext.style.transform = "translateX(100%)"; modalImgNext.style.opacity = "0"; }
       viewport.classList.remove("is-sliding");
-      updateNav();
       animating = false;
+      renderImage();
     }, 290);
+    return;
   }
 
   if (navPrev) navPrev.addEventListener("click", () => slideTo(imgIndex - 1, "prev"));
@@ -271,41 +526,21 @@ setInterval(() => {
     title.textContent = data.title || "";
     desc.textContent = data.desc || "";
 
-    // v102: if card has self-hosted preview video, show it instead of image carousel
-    const videoSrc = data.video || "";
+    // v102+: mixed media support (images + videos as slides)
     clickUrl = (data.url || "").trim();
-    if (videoSrc){
-      // Hide carousel images + nav
-      if (modalImg) modalImg.style.display = "none";
-      if (modalImgNext) modalImgNext.style.display = "none";
-      if (navPrev) navPrev.style.display = "none";
-      if (navNext) navNext.style.display = "none";
-      if (viewport) viewport.classList.add("is-video");
-      modal.classList.remove("is-portrait");
-      // Stop any lightbox usage by clearing images
-      images = [];
-      imgIndex = 0;
-      updateNav();
-      setVideo(videoSrc);
-    } else {
-      // Restore image mode
-      clearVideo();
-      if (modalImg) modalImg.style.display = "";
-      if (modalImgNext) modalImgNext.style.display = "";
-      if (navPrev) navPrev.style.display = "";
-      if (navNext) navNext.style.display = "";
-      if (viewport) viewport.classList.remove("is-video");
-    }
 
-    // v38: set carousel images (skip when video preview)
-    if (!videoSrc){
-      images = normalizeList(data.images);
-      if (images.length === 0 && data.img) images = [data.img];
-      imgIndex = 0;
-      renderImage();
-    }
+    // Prefer data-media (mixed), fallback to data-images, fallback to data-img
+    images = normalizeList(data.media || data.images);
+    if (images.length === 0 && data.img) images = [data.img];
 
-    points.innerHTML = "";
+    // Legacy: if data-video is provided and no media/images exist, treat as single video slide
+    const legacyVideo = (data.video || "").trim();
+    if (images.length === 0 && legacyVideo) images = [legacyVideo];
+
+    imgIndex = 0;
+    renderImage();
+
+points.innerHTML = "";
     const list = (data.points || "").split(" | ").filter(Boolean);
     for (const p of list){
       const li = document.createElement("li");
@@ -928,6 +1163,39 @@ document.addEventListener("keydown", (e) => {
   const viewport = document.querySelector(".img-lightbox__viewport");
   const btnPrev = document.querySelector(".img-lightbox__nav--prev");
   const btnNext = document.querySelector(".img-lightbox__nav--next");
+
+  // v111: mobile idle nav (2s after no interaction, make button background transparent)
+  let __lbIdleTimer = null;
+
+  const __isMobileForLightbox = () => window.matchMedia && window.matchMedia("(max-width: 600px)").matches;
+
+  const __setNavIdle = (idle) => {
+    [btnPrev, btnNext].forEach((btn) => {
+      if(!btn) return;
+
+      // Cache the ORIGINAL computed background once (CSS-driven)
+      if(!btn.dataset.origBgComputed){
+        btn.dataset.origBgComputed = getComputedStyle(btn).backgroundColor || "";
+      }
+
+      if(idle){
+        btn.classList.add("is-idle");
+        // Only fade the background; keep border/icon visible
+        btn.style.backgroundColor = "transparent";
+      }else{
+        btn.classList.remove("is-idle");
+        // Restore to the original CSS background
+        btn.style.backgroundColor = btn.dataset.origBgComputed || "";
+      }
+    });
+  };
+
+  const __resetLightboxIdleTimer = () => {
+    if(!__isMobileForLightbox()) return;
+    if(__lbIdleTimer) clearTimeout(__lbIdleTimer);
+    __setNavIdle(false);
+    __lbIdleTimer = setTimeout(() => __setNavIdle(true), 2000);
+  };
   if(!lb || !lbImg) return;
 
   let imgs = [];
@@ -962,6 +1230,7 @@ document.addEventListener("keydown", (e) => {
     document.body.classList.add("lightbox-open");
     if(btnPrev) btnPrev.style.display = (imgs.length > 1) ? "" : "none";
     if(btnNext) btnNext.style.display = (imgs.length > 1) ? "" : "none";
+    __resetLightboxIdleTimer();
   };
 
   
@@ -969,6 +1238,9 @@ document.addEventListener("keydown", (e) => {
   window.__imgLightbox = window.__imgLightbox || {};
   window.__imgLightbox.open = open;
 const close = () => {
+    if(__lbIdleTimer) clearTimeout(__lbIdleTimer);
+    __lbIdleTimer = null;
+    __setNavIdle(false);
     lb.classList.remove("is-open");
     lb.setAttribute("aria-hidden","true");
     document.body.classList.remove("lightbox-open");
@@ -979,6 +1251,12 @@ const close = () => {
   // v105: expose lightbox close for other modules
   window.__imgLightbox.close = close;
 
+  // v111: reset idle timer on any interaction while lightbox is open
+  lb?.addEventListener("pointerdown", () => __resetLightboxIdleTimer());
+  lb?.addEventListener("pointermove", () => __resetLightboxIdleTimer());
+  lb?.addEventListener("touchstart", () => __resetLightboxIdleTimer(), {passive:true});
+  btnPrev?.addEventListener("click", () => __resetLightboxIdleTimer());
+  btnNext?.addEventListener("click", () => __resetLightboxIdleTimer());
 
   const step = (dir) => {
     if(!imgs.length) return;
