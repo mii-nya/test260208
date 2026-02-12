@@ -16,8 +16,8 @@
 <a class="site-title" href="index.html">Mizuki Nakano</a>
 <button aria-controls="nav" aria-expanded="false" aria-label="メニュー" class="music-menu" id="menuBtn">
 <span aria-hidden="true" class="music-menu__icon">
-<img alt="" class="music-menu__img music-menu__img--staff" src="assets/img/menu-staff.png"/>
-<img alt="" class="music-menu__img music-menu__img--rest" src="assets/img/menu-rest.png"/>
+<img loading="lazy" alt="" class="music-menu__img music-menu__img--staff" src="assets/img/menu-staff.png"/>
+<img loading="lazy" alt="" class="music-menu__img music-menu__img--rest" src="assets/img/menu-rest.png"/>
 </span>
 </button>
 <nav aria-label="メインナビゲーション" class="nav" id="nav">
@@ -109,6 +109,12 @@
 <article class="card work-card" data-badge="Photo" data-category="photo" data-desc="物撮り、色味編集" data-img="assets/img/works/salad-bouquet-1.jpg" data-images="assets/img/works/salad-bouquet-1.jpg, assets/img/works/salad-bouquet-2.jpg, assets/img/works/salad-bouquet-3.jpg, assets/img/works/salad-bouquet-4.jpg" data-muted="Edit" data-points="色温度 | 露出 | トーン" data-title="サラダブーケ" data-url="" style="--bg:url('assets/img/works/salad-bouquet-1.jpg')" tabindex="0" data-id="mansion">
 <div class="card__top"><span class="badge">Photo</span> </div>
 <h3 class="card__title">サラダブーケ</h3>
+<p class="card__text">物撮り、色味編集</p>
+</article>
+
+<article class="card work-card" data-badge="Photo" data-category="photo" data-desc="物撮り、色味編集" data-img="assets/img/works/hydrangea-jelly-1.jpg" data-images="assets/img/works/hydrangea-jelly-1.jpg, assets/img/works/hydrangea-jelly-2.jpg" data-muted="Edit" data-points="色温度 | 露出 | トーン" data-title="紫陽花ゼリー" data-url="" style="--bg:url('assets/img/works/hydrangea-jelly-1.jpg')" tabindex="0" data-id="mansion">
+<div class="card__top"><span class="badge">Photo</span> </div>
+<h3 class="card__title">紫陽花ゼリー</h3>
 <p class="card__text">物撮り、色味編集</p>
 </article>
 
@@ -260,10 +266,10 @@
 <div aria-hidden="true" class="works-modal__media works-modal__carousel" id="modalMedia">
  <button class="works-modal__nav works-modal__nav--prev" type="button" aria-label="前の画像">‹</button>
  <div class="works-modal__viewport">
- <img class="works-modal__img" id="modalImg" alt="作品画像">
- <img class="works-modal__img works-modal__img--next" id="modalImgNext" alt="" aria-hidden="true">
+ <img loading="lazy" class="works-modal__img" id="modalImg" alt="作品画像">
+ <img loading="lazy" class="works-modal__img works-modal__img--next" id="modalImgNext" alt="" aria-hidden="true">
   <div class="works-modal__video-wrap" id="modalVideoWrap" hidden>
-    <video class="works-modal__video" id="modalVideo" autoplay muted loop playsinline preload="metadata"></video>
+    <video class="works-modal__video" id="modalVideo" autoplay muted loop playsinline preload="none"></video>
   </div>
 
  </div>
@@ -291,13 +297,13 @@
 </div>
 <div aria-label="SNSリンク" class="social">
 <a aria-label="X" class="social__link" href="https://x.com/" rel="noreferrer" target="_blank">
-<img alt="" src="assets/icons/x.svg"/>
+<img loading="lazy" alt="" src="assets/icons/x.svg"/>
 </a>
 <a aria-label="Instagram" class="social__link" href="https://www.instagram.com/mii_nya0704" rel="noreferrer" target="_blank">
-<img alt="" src="assets/icons/instagram.svg"/>
+<img loading="lazy" alt="" src="assets/icons/instagram.svg"/>
 </a>
 <a aria-label="Video" class="social__link" href="https://www.youtube.com/@vvh0_1z_3e" rel="noreferrer" target="_blank">
-<img alt="" src="assets/icons/youtube.svg"/>
+<img loading="lazy" alt="" src="assets/icons/youtube.svg"/>
 </a>
 </div>
 </div>
@@ -318,8 +324,8 @@
   <div class="img-lightbox__backdrop"></div>
   <button class="img-lightbox__nav img-lightbox__nav--prev" type="button" aria-label="前の画像">‹</button>
   <div class="img-lightbox__viewport" role="dialog" aria-label="拡大画像" tabindex="-1">
-    <img class="img-lightbox__img" id="imgLightboxImg" alt="拡大表示">
-    <img class="img-lightbox__img img-lightbox__img--next" id="imgLightboxImgNext" alt="" aria-hidden="true">
+    <img loading="lazy" class="img-lightbox__img" id="imgLightboxImg" alt="拡大表示">
+    <img loading="lazy" class="img-lightbox__img img-lightbox__img--next" id="imgLightboxImgNext" alt="" aria-hidden="true">
   </div>
   <button class="img-lightbox__nav img-lightbox__nav--next" type="button" aria-label="次の画像">›</button>
 </div>
