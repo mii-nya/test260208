@@ -83,6 +83,36 @@ setInterval(() => {
   const modal = document.getElementById("worksModal");
   if (!modal) return;
 
+  // Works list: lazy apply card background images from data-bg (thumbs)
+  (function(){
+    const cards = document.querySelectorAll(".work-card[data-bg]");
+    if (!cards.length) return;
+
+    const applyBg = (el) => {
+      if (el.dataset.bgLoaded) return;
+      const url = (el.dataset.bg || "").trim();
+      if (!url) return;
+      el.style.setProperty("--bg", `url('${url}')`);
+      el.dataset.bgLoaded = "1";
+    };
+
+    if ("IntersectionObserver" in window) {
+      const io = new IntersectionObserver((entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            applyBg(entry.target);
+            io.unobserve(entry.target);
+          }
+        });
+      }, { rootMargin: "300px 0px", threshold: 0.01 });
+
+      cards.forEach(c => io.observe(c));
+    } else {
+      cards.forEach(applyBg);
+    }
+  })();
+
+
   const panel = modal.querySelector(".works-modal__panel");
   const media = document.getElementById("modalMedia");
   const badge = document.getElementById("modalBadge");
@@ -226,9 +256,11 @@ setInterval(() => {
         return;
       }
 
-      // Image slide: use existing image lightbox API
+      // Image slide: open fullres image if available
       const api = window.__imgLightbox;
-      const src = (modalImg && modalImg.getAttribute("src")) ? modalImg.getAttribute("src") : "";
+      const fullSrc = fullSlides[imgIndex] || "";
+      const fallbackSrc = (modalImg && modalImg.getAttribute("src")) ? modalImg.getAttribute("src") : "";
+      const src = fullSrc || fallbackSrc;
       if (api && typeof api.open === "function" && src) api.open(src);
     };
 
@@ -319,6 +351,8 @@ setInterval(() => {
     __videoLbVideo.currentTime = 0;
     __videoLbVideo.play().catch(()=>{});
   }
+  window.openVideoLightbox = openVideoLightbox;
+
 
   function closeVideoLightbox(){
     if (!__videoLbEl) return;
@@ -338,6 +372,7 @@ setInterval(() => {
   // v60: expose carousel state for lightbox
   window.__worksCarousel = window.__worksCarousel || {};
   window.__worksCarousel.getImages = () => images.slice();
+  window.__worksCarousel.getFullSlides = () => fullSlides.slice();
   window.__worksCarousel.getIndex = () => imgIndex;
   window.__worksCarousel.setIndex = (i) => { imgIndex = i; renderImage(); };
   let imgIndex = 0;
@@ -529,13 +564,23 @@ setInterval(() => {
     // v102+: mixed media support (images + videos as slides)
     clickUrl = (data.url || "").trim();
 
-    // Prefer data-media (mixed), fallback to data-images, fallback to data-img
-    images = normalizeList(data.media || data.images);
-    if (images.length === 0 && data.img) images = [data.img];
+    // Build MODAL slides: images from data-images/data-img (modal webp) + videos from data-video (original)
+    const modalImgs = normalizeList(data.images);
+    const modalVideos = normalizeList(data.video);
 
-    // Legacy: if data-video is provided and no media/images exist, treat as single video slide
-    const legacyVideo = (data.video || "").trim();
-    if (images.length === 0 && legacyVideo) images = [legacyVideo];
+    images = modalImgs.length ? modalImgs : (data.img ? [data.img] : []);
+
+    // If data-images accidentally contains videos, keep them
+    const extraVideosFromImages = images.filter((s) => isVideoFile(s));
+
+    // Combine videos (dedupe)
+    const vids = [...modalVideos, ...extraVideosFromImages].filter(Boolean);
+    vids.forEach((v) => { if (!images.includes(v)) images.push(v); });
+
+    // Build FULLRES slides for lightbox: originals from data-full-images/data-full-img/data-media + the same videos
+    const fullImgs = normalizeList(data.fullImages || data.fullImg || data.media);
+    fullSlides = fullImgs.length ? fullImgs : images.slice(); // fallback to modal
+    vids.forEach((v) => { if (!fullSlides.includes(v)) fullSlides.push(v); });
 
     imgIndex = 0;
     renderImage();
@@ -1201,19 +1246,102 @@ document.addEventListener("keydown", (e) => {
   let imgs = [];
   let idx = 0;
 
-  const syncFromModal = () => {
-    const api = window.__worksCarousel;
-    imgs = (api && typeof api.getImages === "function") ? api.getImages() : [];
-    idx = (api && typeof api.getIndex === "function") ? api.getIndex() : 0;
-    if (idx < 0) idx = 0;
-    if (idx >= imgs.length) idx = 0;
-  };
+  const isVideo = (src) => /(\.mp4|\.mov|\.webm)$/i.test(src || "");
 
-  const render = () => {
-    lbImg.src = imgs[idx] || lbImg.src || "";
-  };
+// Keep one lightbox that can show BOTH images and videos.
+// It syncs from Works modal, but prefers FULL slides (original jpg/png + videos).
+const syncFromModal = () => {
+  const api = window.__worksCarousel;
+  imgs = (api && typeof api.getFullSlides === "function") ? api.getFullSlides()
+       : (api && typeof api.getImages === "function") ? api.getImages()
+       : [];
+  idx = (api && typeof api.getIndex === "function") ? api.getIndex() : 0;
+  if (idx < 0) idx = 0;
+  if (idx >= imgs.length) idx = 0;
+};
 
-  const open = (src) => {
+// Video element for lightbox (created lazily)
+let lbVideo = null;
+
+const ensureVideoEl = () => {
+  if (lbVideo) return lbVideo;
+  const host = viewport || lb;
+  lbVideo = document.createElement("video");
+  lbVideo.className = "img-lightbox__video";
+  lbVideo.playsInline = true;
+  lbVideo.controls = false;
+  lbVideo.preload = "metadata";
+  lbVideo.muted = true;  
+  lbVideo.defaultMuted = true;
+
+  let controlsTimer = null;
+
+const showControlsTemporarily = () => {
+  lbVideo.controls = true;                 // UIを出す
+  clearTimeout(controlsTimer);
+  controlsTimer = setTimeout(() => {
+    // 再生中なら隠す（停止中は残してOK）
+    if (!lbVideo.paused) lbVideo.controls = false;
+  }, 2000);
+};
+
+// 1回タップでコントロール表示
+lbVideo.addEventListener("click", (e) => {
+  e.stopPropagation(); // ← あなたの左右ボタンなどと競合するなら重要
+  showControlsTemporarily();
+});
+
+// 再生開始したら、少ししたら隠す
+lbVideo.addEventListener("play", () => {
+  clearTimeout(controlsTimer);
+  controlsTimer = setTimeout(() => { lbVideo.controls = false; }, 800);
+});
+
+// 一時停止したら、操作したいので表示
+lbVideo.addEventListener("pause", () => {
+  lbVideo.controls = true;
+});
+
+  lbVideo.style.cssText = "width:100%;height:100%;object-fit:contain;display:none;background:#000;";
+  host.appendChild(lbVideo);
+  return lbVideo;
+};
+
+const showImage = () => {
+  if (lbVideo) { try{ lbVideo.pause(); }catch(e){} lbVideo.style.display = "none"; lbVideo.removeAttribute("src"); }
+  lbImg.style.display = "";
+  if (lbImgNext) lbImgNext.style.display = "";
+};
+
+const showVideo = (src) => {
+  const v = ensureVideoEl();
+  // Hide image layers while video is visible
+  lbImg.style.display = "none";
+  if (lbImgNext) lbImgNext.style.display = "none";
+  v.style.display = "";
+  if (v.src !== src) v.src = src;
+  try{ v.currentTime = 0; }catch(e){}
+  // Try to autoplay (may be blocked; controls are on anyway)
+  const p = v.play();
+  if (p && typeof p.catch === "function") p.catch(()=>{});
+};
+
+const renderAt = () => {
+  const src = imgs[idx] || "";
+  if (!src) return;
+
+  if (isVideo(src)) {
+    showVideo(src);
+    return;
+  }
+
+  showImage();
+  lbImg.src = src;
+};
+
+const render = () => { renderAt(); };
+
+const open = (src) => {
     syncFromModal();
     // if src is provided and exists in list, align index
     if(src && imgs.length){
@@ -1246,6 +1374,7 @@ const close = () => {
     document.body.classList.remove("lightbox-open");
     lbImg.src = "";
     if(lbImgNext) lbImgNext.src = "";
+    if (lbVideo){ try{ lbVideo.pause(); }catch(e){} lbVideo.style.display="none"; lbVideo.removeAttribute("src"); }
   };
 
   // v105: expose lightbox close for other modules
@@ -1259,44 +1388,54 @@ const close = () => {
   btnNext?.addEventListener("click", () => __resetLightboxIdleTimer());
 
   const step = (dir) => {
-    if(!imgs.length) return;
-    const nextIndex = (idx + dir + imgs.length) % imgs.length;
+  if(!imgs.length) return;
+  const nextIndex = (idx + dir + imgs.length) % imgs.length;
 
-    if(!lbImgNext || !viewport){
-      idx = nextIndex;
-      render();
-      return;
-    }
+  const curSrc = imgs[idx] || "";
+  const nextSrc = imgs[nextIndex] || "";
+  const canAnimate = !!(lbImgNext && viewport && !isVideo(curSrc) && !isVideo(nextSrc));
 
-    viewport.classList.add("is-sliding");
-    const dirName = (dir > 0) ? "next" : "prev";
-    lbImgNext.src = imgs[nextIndex];
+  if(!canAnimate){
+    idx = nextIndex;
+    renderAt();
+    __resetLightboxIdleTimer();
+    return;
+  }
 
-    const nextStart = (dirName === "next") ? 100 : -100;
-    const outTo = (dirName === "next") ? -18 : 18;
+  // Image -> Image slide animation
+  viewport.classList.add("is-sliding");
+  const dirName = (dir > 0) ? "next" : "prev";
+  lbImgNext.style.display = "";
+  lbImgNext.src = nextSrc;
 
-    lbImg.style.transform = "translateX(0%)";
-    lbImg.style.opacity = "1";
-    lbImgNext.style.transform = `translateX(${nextStart}%)`;
-    lbImgNext.style.opacity = "1";
+  const nextStart = (dirName === "next") ? 100 : -100;
+  const outTo = (dirName === "next") ? -18 : 18;
 
-    void lbImgNext.offsetWidth;
+  lbImg.style.display = "";
+  lbImg.style.transform = "translateX(0%)";
+  lbImg.style.opacity = "1";
+  lbImgNext.style.transform = `translateX(${nextStart}%)`;
+  lbImgNext.style.opacity = "1";
 
-    lbImg.style.transform = `translateX(${outTo}%)`;
-    lbImg.style.opacity = "0";
-    lbImgNext.style.transform = "translateX(0%)";
-    lbImgNext.style.opacity = "1";
+  void lbImgNext.offsetWidth;
 
-    window.setTimeout(() => {
-      idx = nextIndex;
-      lbImg.src = imgs[idx] || "";
-      lbImg.style.transform = "";
-      lbImg.style.opacity = "";
-      lbImgNext.style.transform = "translateX(100%)";
-      lbImgNext.style.opacity = "0";
-      viewport.classList.remove("is-sliding");
-    }, 290);
-  };
+  lbImg.style.transform = `translateX(${outTo}%)`;
+  lbImg.style.opacity = "0";
+  lbImgNext.style.transform = "translateX(0%)";
+  lbImgNext.style.opacity = "1";
+
+  window.setTimeout(() => {
+    idx = nextIndex;
+    lbImg.src = imgs[idx] || "";
+    lbImg.style.transform = "";
+    lbImg.style.opacity = "";
+    lbImgNext.style.transform = "translateX(100%)";
+    lbImgNext.style.opacity = "0";
+    viewport.classList.remove("is-sliding");
+    __resetLightboxIdleTimer();
+  }, 290);
+};
+
 
   if(btnPrev) btnPrev.addEventListener("click", (e) => { e.stopPropagation(); step(-1); });
   if(btnNext) btnNext.addEventListener("click", (e) => { e.stopPropagation(); step(1); });
@@ -1321,8 +1460,16 @@ const close = () => {
     imgEl.addEventListener("click", (e) => {
       const modal = document.getElementById("worksModal");
       if(!modal || !modal.classList.contains("is-open")) return;
-      const src = imgEl.getAttribute("src");
-      open(src);
+      const c = window.__worksCarousel;
+      const idx = c && typeof c.getIndex==="function" ? c.getIndex() : 0;
+      const full = c && typeof c.getFullSlides==="function" ? c.getFullSlides() : [];
+      const src = full[idx] || imgEl.getAttribute("src");
+      // If it is a video, open the video lightbox if available
+      if (/(\.mp4|\.mov|\.webm)$/i.test(src) && typeof window.openVideoLightbox === "function") {
+        window.openVideoLightbox(src);
+      } else {
+        open(src);
+      }
       e.preventDefault();
       e.stopPropagation();
     });
@@ -1336,7 +1483,7 @@ const close = () => {
     if(!img) return;
     const modal = document.getElementById("worksModal");
     if(!modal || !modal.classList.contains("is-open")) return;
-    open(img.getAttribute("src"));
+    open();
   });
 })();
 

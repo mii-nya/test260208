@@ -1646,6 +1646,30 @@ body.lightbox-open{
   overflow: hidden;
 }
 
+/* Lightbox video: visibility is controlled by JS via the [hidden] attribute.
+   Do NOT force display here (otherwise JS cannot hide/show reliably). */
+.lb-video{
+  width: 100%;
+  height: auto;
+  max-height: 82vh;
+}
+
+/* ライトボックス内の表示枠を広げる（親が小さい問題を潰す） */
+#imgLightbox .lightbox__viewport,
+#imgLightbox .lightbox__stage,
+#imgLightbox .lightbox__media {
+  width: min(92vw, 1100px) !important;
+  max-width: 92vw !important;
+}
+
+/* 動画そのものも枠いっぱいに */
+#imgLightbox video.lb-video {
+  width: 100% !important;
+  height: auto !important;
+  max-height: 82vh !important;
+  /* do not force display */
+}
+
 
 /* v60: lightbox carousel nav */
 .img-lightbox__viewport{
@@ -2308,4 +2332,21 @@ body.lightbox-open{
     aspect-ratio: 16 / 9 !important;
     height: auto !important;
   }
+}
+
+/* 画像レイヤーは常に上 */
+.modal__viewport img {
+  position: relative;
+  z-index: 2;
+}
+
+/* 動画レイヤーはその下 */
+.modal__video-wrap {
+  position: absolute;
+  z-index: 1;
+}
+
+/* 非表示時は完全にクリック不可 */
+.modal__video-wrap[hidden]{
+  display: none !important;
 }
